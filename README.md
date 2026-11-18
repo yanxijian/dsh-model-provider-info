@@ -1,5 +1,11 @@
 # dsh-model-provider-info
 
+**English** · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
+
+[![hygiene](https://github.com/yanxijian/dsh-model-provider-info/actions/workflows/hygiene.yml/badge.svg)](https://github.com/yanxijian/dsh-model-provider-info/actions/workflows/hygiene.yml)
+[![npm](https://img.shields.io/npm/v/dsh-model-provider-info.svg)](https://www.npmjs.com/package/dsh-model-provider-info)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Shows the provider name before the model name in the DeepSeek Harness composer's model seat, and
 gives third-party routes a visual weight of their own.
 
