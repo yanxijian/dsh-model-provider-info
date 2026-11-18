@@ -232,6 +232,7 @@ window.__ModuleLoader__.load({
             lineHeight: '16px',
             fontWeight: 600,
             padding: '0 5px',
+            marginRight: '4px',
             whiteSpace: 'nowrap',
           }
           : {
@@ -239,9 +240,11 @@ window.__ModuleLoader__.load({
             fontWeight: firstParty ? 400 : 500,
           }
         const providerNode = h('span', { style: providerStyle }, provider.name)
-        const separator = firstParty
-          ? h('span', { style: { color: 'var(--dsw-alias-label-caption)', padding: '0 2px' }, 'aria-hidden': 'true' }, '·')
-          : null
+        // The chip separates itself with its border and margin; every other
+        // provider name needs the middot so it does not run into the model name.
+        const separator = colored
+          ? null
+          : h('span', { style: { color: 'var(--dsw-alias-label-caption)', padding: '0 2px' }, 'aria-hidden': 'true' }, '·')
 
         return h('span', {
           'data-provider-label': '',
