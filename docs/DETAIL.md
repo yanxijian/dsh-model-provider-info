@@ -1,77 +1,93 @@
-# 模型名前显示供应商
+# Provider before model name
 
-在 DSH Web 输入框的模型位里，把供应商名称显示在模型名称前面，并按「官方 / 非官方」给出不同的视觉分量。
+Shows the provider name before the model name in the DSH Web composer's model seat, and gives
+official and third-party routes different visual weight.
 
-## 它改变了哪里
+## What it changes
 
-输入框里“当前模型”有三处显示位置，默认只显示目录里的模型名：
+The composer names the current model in three places, and by itself renders only the catalog name:
 
-1. 输入框右下角的模型按钮（trigger）；
-2. 菜单里 **模型** 那一行的当前值（menu）；
-3. 展开后的模型列表每一行（option）。
+1. the model button at the bottom right of the composer (trigger);
+2. the current value of the **Model** row in the menu (menu);
+3. every row of the expanded model list (option).
 
-本插件通过 `conversation.input.model.label` 内联插槽接管这三处，显示成
-`DeepSeek 账号 · DeepSeek-V4.1-Flash`；后面的推理等级（如 `High`）仍由选择器单独显示。
+This plugin takes over all three through the `conversation.input.model.label` inline slot, so the
+label reads `DeepSeek Account · DeepSeek-V4.1-Flash`; the reasoning effort (such as `High`) stays a
+separate caption rendered by the selector.
 
-## 官方与非官方的区分
+## First-party vs third-party
 
-判定：`deepseek-account`（DeepSeek 账号）与 `deepseek-official`（DeepSeek API Key）算第一方，
-其余任何 provider id（中转站、自建网关、别家厂商）算第三方。这个口径取自产品自己的排序规则
-（`ui-model-selection` 的 `provider-order.ts`、`ui-settings-models` 的 `store.ts` 都只特判这两个 id）。
+`deepseek-account` (DeepSeek Account) and `deepseek-official` (DeepSeek API Key) are first-party;
+every other provider id (a relay, a self-hosted gateway, another vendor) is third-party. The split
+follows the product's own ordering (`provider-order.ts` in `ui-model-selection`, `store.ts` in
+`ui-settings-models` both special-case exactly these two ids).
 
-强调强度按「表面」递减，避免整屏警报：
+Emphasis is graded by surface, so the screen does not become a wall of warnings:
 
-| 位置 | 第一方 | 第三方 |
+| Surface | First-party | Third-party |
 |---|---|---|
-| 模型按钮 | 灰色 caption 小字 | **#F61A43 描边小标签**：12px / 字重 600、1px 红色描边、`--dsw-radius-xs` 圆角、透明底 |
-| 菜单「模型」当前值 | 同上 | 同上（这里也是「当前选择」，值得同样的强度） |
-| 展开的模型列表行 | 灰色 caption 小字 | `--dsw-alias-label-secondary` + 字重 500，**不上色、不加边框** |
+| Model button | plain caption text | **`#F61A43` outlined chip**: 12px / weight 600, 1px red border, `--dsw-radius-xs`, transparent fill |
+| Menu "Model" current value | same as above | same (this is also the current selection, worth the same weight) |
+| Expanded list rows | plain caption text | `--dsw-alias-label-secondary` + weight 500, **no colour, no border** |
 
-列表行降级的原因：每一行上方本来就有按供应商分组的组标题，逐行再挂一个红标签等于同一组里
-供应商讲两遍，整列红框会变成噪音。
+Why the rows are toned down: every row already has a provider heading above it, so a red chip on
+each row would say the provider twice and turn the column into noise.
 
-目录角标（`model.badge`，宿主内建标签用的那个 `Tag`）也已还原：触发按钮里排在模型名前，
-菜单与列表行里排在模型名后。
+The catalog badge (`model.badge`, the `Tag` the host's built-in label draws) is reproduced as well:
+before the model name in the trigger, after it in menus and rows.
 
-## 配置
+## Configuration
 
-![供应商卡片上的颜色入口与预览](provider-colors.zh-CN.png)
+![The colour entry and preview on a provider card](provider-colors.png)
 
-**设置 → 模型**，两处，都保存在浏览器本地：
+**Settings → Models**, two places, both stored in the browser:
 
-**每个供应商卡片**底部有一个颜色图标：点一下即可选色，图标本身显示当前生效的颜色（带粗描边表示这个供应商有自己的颜色，而不是跟随默认）；双击恢复默认。
+**Every provider card** ends with a colour icon: click to pick a colour, and the icon shows the
+colour in use (a heavier ring means the provider has its own colour rather than following the
+default); double-click to go back to the default.
 
-页面底部卡片设默认值：
+The card at the bottom of the page sets the defaults:
 
-| 选项 | 默认 | 作用 |
+| Option | Default | Effect |
 |---|---|---|
-| 默认颜色 | `#F61A43` | 图标里选；没有单独配色的供应商用它 |
-| 列表行也用颜色 | 关 | 关：列表行只有灰度与字重差别；开：列表行也用描边标签 |
-| 官方路由也显示供应商 | 开 | 关：`deepseek-account` / `deepseek-official` 只显示模型名 |
+| Default colour | `#F61A43` | Picked from the icon; used by providers without a colour of their own |
+| Colour the list rows too | off | Off: rows differ by tone and weight only. On: rows get the outlined chip as well |
+| Show the provider on DeepSeek routes | on | Off: `deepseek-account` / `deepseek-official` show the model name alone |
 
-给 DeepSeek 自己的路由也设了颜色时，那条路由会一并切换成描边标签——显式选颜色就是要看见它。
+Choosing a colour for one of DeepSeek's own routes switches that route to the chip as well — an
+explicit colour is a request to see it.
 
-两处共用同一份记录，改完输入框里的模型位立刻跟着变。
+Both surfaces share one record, so the composer's model seat updates as soon as a change is made.
 
-## 几个刻意的取舍
+## Deliberate trade-offs
 
-- **#F61A43 是字面颜色，不是主题 token**：这是全局唯一的一处违背「只用 token」的地方，
-  它被收在 `client.js` 顶部的 `ACCENT` 常量里，换色或改回 token 只改一行。
-- **描边而不填充**：同一色相的字压在浅色底上会再掉约五分之一的对比度，而 1px 描边本身已经足够像徽标。
-- **12px / 600，而不是设置页 `Custom` 标签的 11px / 400**：#F61A43 是中调红，在浅色卡片上约 4.07:1、
-  在深色输入框底（约 `#2C2C2E`）上约 3.4:1，11px 的常规字重撑不住，靠字号和字重补。
-- **边框用 1px 而不是 0.5px**：Windows 100% / 125% 缩放下半像素线会被抽稀成发虚的一条或直接消失。
-- **供应商 span 保持纯 inline**，与 13px 模型名共享基线；改成 inline-flex 反而会引入 1–2px 的基线偏移。
-- **描边里的文字上移 0.5px**（`position: relative`）：行盒分的是字体的 em 方框，不是墨迹——
-  12px 字号下基线以上约 13px、以下只有约 3px，字的主体压在 x-height 上，因此 1px 描边框里
-  上方空约 8px、下方仅 4px；而 "zai" 里 i 的点顶到 ascender，又往回收。上移半个像素后，墨迹
-  距上下边框各约 7px（2× 屏上正好 1 个设备像素），只动墨迹，不动边框盒，也不动它与模型名
-  共享的基线。
-- **不需要 `priority`**：0.2.1 起宿主这个 single 槽没有内置占用者，直接注册即可。
+- **`#F61A43` is a literal colour, not a theme token**: this is the only place in the plugin that
+  breaks "tokens only", and it lives in `DEFAULT_SETTINGS.accent` at the top of `client.js`;
+  switching the colour or returning to a token is a one-line change.
+- **Outlined, not filled**: accent text over a tint of its own hue loses about a fifth of its
+  contrast, and a 1px border already reads as a badge.
+- **12px / 600 rather than the Settings `Custom` tag's 11px / 400**: `#F61A43` is a mid-tone red at
+  roughly 4.07:1 against the light card and 3.4:1 against the dark composer surface (about
+  `#2C2C2E`); an 11px regular weight cannot carry it, so size and weight compensate.
+- **A 1px border rather than 0.5px**: at 100% / 125% DPI Windows thins a half-pixel line into a
+  blur or drops it entirely.
+- **The provider span stays a plain inline element**, sharing the baseline of the 13px model name;
+  making it inline-flex would introduce a 1–2px baseline offset.
+- **The text inside the chip is nudged up 0.5px** (`position: relative`): a line box splits the
+  font's em square, not the ink — at 12px the baseline sits about 13px below the top and only about
+  3px above the bottom, and the body of lowercase text rides the x-height, so inside a 1px border
+  there is about 8px above and 4px below; the dot of the `i` in "zai" reaches the ascender and pulls
+  back the other way. Half a pixel puts the ink about 7px from either border (exactly one device
+  pixel on a 2x display), moving only the ink — not the border box, and not the baseline it shares
+  with the model name.
+- **No `priority` needed**: since 0.2.1 the host's single slot has no built-in occupant, so a plain
+  registration is enough.
 
-## 注意
+## Notes
 
-- 只改显示：选中、搜索、焦点、勾选标记、`/model` 命令弹窗和按钮的无障碍名称仍由原生模型选择器负责。
-- 配置项存在浏览器的 `localStorage`（键 `dsh-model-provider-info/settings/v1`），是**按浏览器**而不是按 profile 保存的。
-- 模型名过长时仍会省略，供应商标签与目录角标也占用按钮宽度。
-- 想恢复默认，在 **插件** 页面禁用或移除本插件即可。
+- Display only: selection, search, focus, check marks, the `/model` command popup and the button's
+  accessible name stay owned by the native model selector.
+- Preferences live in the browser's `localStorage` (key `dsh-model-provider-info/settings/v1`), so
+  they are **per browser**, not per profile.
+- Long model names are still ellipsized, and the provider chip and catalog badge share that width.
+- To go back to the default, disable or remove the plugin on the **Plugins** page.

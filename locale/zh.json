@@ -2,6 +2,6 @@
   "meta": {
     "title": "模型名前显示供应商",
     "description": "在输入框的模型选择器里，把供应商名称显示在模型名称前面；DeepSeek 官方两家路由保持灰色文字，其他供应商（中转站、自建网关、别家厂商）显示为 #F61A43 红色描边小标签，一眼分辨这条回答走的是哪条通道。",
-    "detail": "docs/DETAIL.md"
+    "detail": "docs/DETAIL.zh.md"
   }
 }

@@ -188,6 +188,19 @@ window.__ModuleLoader__.load({
       'custom': 'Custom…',
       'followDefault': 'Follow the default',
     }
+    const ja = {
+      'title': 'モデル名の前にプロバイダー名',
+      'description': '入力欄のモデル位置にプロバイダー名を表示します。DeepSeek 自身の経路はキャプションの色のまま、ほかの経路はアイコンで選んだ色を使います。',
+      'accent': '既定の色',
+      'accentHint': '独自の色を持たないプロバイダーが使います。',
+      'rows': '一覧の行にも色を付ける',
+      'rowsHint': 'オフのとき、展開したモデル一覧は色調とウェイトだけの違いになります。',
+      'official': 'DeepSeek の経路にもプロバイダーを表示',
+      'officialHint': 'オフのとき、DeepSeek アカウントと公式 API はモデル名だけを表示します。',
+      'cardPick': 'クリックで色を選び、ダブルクリックで既定に戻す',
+      'custom': 'カスタム…',
+      'followDefault': '既定に従う',
+    }
 
     const labelStyle = { fontSize: '13px', color: 'var(--dsw-alias-label-primary)', fontWeight: 500 }
     const hintStyle = { margin: '2px 0 0', fontSize: '12px', lineHeight: '18px', color: 'var(--dsw-alias-label-tertiary)' }
@@ -578,7 +591,7 @@ window.__ModuleLoader__.load({
       inject: ['slots', 'locale'],
       apply(ctx) {
         const t = ctx.locale.bind(NS)
-        ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'model-provider-info: dictionaries')
+        ctx.effect(() => ctx.locale.register(NS, { zh, en, ja }), 'model-provider-info: dictionaries')
 
         const ModelLabel = createModelLabel(ctx)
         const SettingsCard = createSettingsCard(t)
