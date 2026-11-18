@@ -1,5 +1,6 @@
 /**
- * Client half: the composer's inline model label, plus its Settings → Models card.
+ * Client half: the composer's inline model label, its Settings → Models default
+ * card, and a per-provider colour control on every provider card.
  *
  * The `conversation.input.model.label` slot owns every place the composer names
  * the current model — the trigger caption, the root menu's current value, and
@@ -10,11 +11,11 @@
  * built-in fallback would otherwise render.
  *
  * Emphasis is graded by surface: the two "current selection" surfaces (trigger,
- * menu value) mark a third-party route in the configured accent colour, because
- * "this answer came through someone else's endpoint" is worth seeing without
- * opening the menu. Rows of the expanded list stay a text annotation — every
- * group already has its provider as a heading, and a column of coloured chips
- * would turn a list into a wall of warnings.
+ * menu value) mark a third-party route in its accent colour, because "this
+ * answer came through someone else's endpoint" is worth seeing without opening
+ * the menu. Rows of the expanded list stay a text annotation — every group
+ * already has its provider as a heading, and a column of coloured chips would
+ * turn a list into a wall of warnings.
  */
 window.__ModuleLoader__.load({
   id: 'dsh-model-provider-info',
@@ -38,16 +39,21 @@ window.__ModuleLoader__.load({
 
     /** Defaults when no preference has been stored yet. */
     const DEFAULT_SETTINGS = Object.freeze({
-      /** Accent for third-party routes. */
+      /** Accent for third-party routes without their own colour. */
       accent: '#F61A43',
+      /** Per-provider colour overrides, keyed by the catalog's provider id. */
+      colors: Object.freeze({}),
       /** Colour the expanded list rows too, not just the current selection. */
       colorRows: false,
       /** Show the provider on DeepSeek's own routes (plain caption text). */
       showOfficialProvider: true,
     })
 
-    /** Offered presets in the settings card; the value is a plain hex colour. */
+    /** Offered presets; the value is a plain hex colour. */
     const ACCENT_PRESETS = ['#F61A43', '#F26B0F', '#2E6BE6', '#7C4DFF', '#1F9D55', '#6B7480']
+
+    /** `#rrggbb`, the only accepted shape for a stored colour. */
+    const HEX = /^#[0-9a-f]{6}$/i
 
     /* ------------------------------------------------------------------ *
      * Badge — a copy of the ui-primitives Tag geometry and tone palette.
@@ -82,19 +88,26 @@ window.__ModuleLoader__.load({
     }
 
     /* ------------------------------------------------------------------ *
-     * Preference store — one record per browser, shared by the label and the
-     * settings card through a module-level subscription.
+     * Preference store — one record per browser, shared by the label and both
+     * settings surfaces through a module-level subscription.
      * ------------------------------------------------------------------ */
     const listeners = new Set()
     let settings = readSettings()
 
     /** Coerce a parsed record into the current shape. */
     function normalize(raw) {
-      const accent = typeof raw?.accent === 'string' && /^#[0-9a-f]{6}$/i.test(raw.accent)
+      const accent = typeof raw?.accent === 'string' && HEX.test(raw.accent)
         ? raw.accent.toLowerCase()
         : DEFAULT_SETTINGS.accent
+      const colors = {}
+      if (raw?.colors !== null && typeof raw?.colors === 'object') {
+        for (const [provider, value] of Object.entries(raw.colors)) {
+          if (typeof value === 'string' && HEX.test(value)) colors[provider] = value.toLowerCase()
+        }
+      }
       return {
         accent,
+        colors,
         colorRows: raw?.colorRows === true,
         showOfficialProvider: raw?.showOfficialProvider !== false,
       }
@@ -104,10 +117,10 @@ window.__ModuleLoader__.load({
     function readSettings() {
       try {
         const raw = window.localStorage.getItem(STORAGE_KEY)
-        if (raw === null) return { ...DEFAULT_SETTINGS }
+        if (raw === null) return normalize(DEFAULT_SETTINGS)
         return normalize(JSON.parse(raw))
       } catch {
-        return { ...DEFAULT_SETTINGS }
+        return normalize(DEFAULT_SETTINGS)
       }
     }
 
@@ -122,7 +135,7 @@ window.__ModuleLoader__.load({
       return settings
     }
 
-    /** Merge one patch, persist it, and notify the label. */
+    /** Merge one patch, persist it, and notify every surface. */
     function patchSettings(patch) {
       settings = normalize({ ...settings, ...patch })
       try {
@@ -131,9 +144,27 @@ window.__ModuleLoader__.load({
       for (const listener of [...listeners]) listener()
     }
 
+    /** Set one provider's own colour. */
+    function setProviderColor(providerId, hex) {
+      if (typeof providerId !== 'string' || providerId === '' || !HEX.test(hex)) return
+      patchSettings({ colors: { ...settings.colors, [providerId]: hex.toLowerCase() } })
+    }
+
+    /** Drop one provider's override so it falls back to the default accent. */
+    function clearProviderColor(providerId) {
+      const next = { ...settings.colors }
+      delete next[providerId]
+      patchSettings({ colors: next })
+    }
+
     /** Subscribe a component to the preference record. */
     function useSettings() {
       return useSyncExternalStore(subscribe, getSettings)
+    }
+
+    /** The colour that applies to one provider: its override, else the accent. */
+    function colorFor(current, providerId) {
+      return current.colors[providerId] ?? current.accent
     }
 
     /* ------------------------------------------------------------------ *
@@ -141,9 +172,9 @@ window.__ModuleLoader__.load({
      * ------------------------------------------------------------------ */
     const zh = {
       'title': '模型名前显示供应商',
-      'description': '在输入框的模型位里，把供应商名称显示在模型名称前面；DeepSeek 自己的两条路由用灰色文字，其他路由用下面的强调色标出。',
-      'accent': '强调色',
-      'accentHint': '仅用于非 DeepSeek 路由的供应商标签。',
+      'description': '在输入框的模型位里，把供应商名称显示在模型名称前面；DeepSeek 自己的两条路由用灰色文字，其他路由用下面这个默认强调色。',
+      'accent': '默认强调色',
+      'accentHint': '没有单独设置颜色的供应商用它。想给某个供应商单独配色，去它自己的卡片里改。',
       'presets': '预设',
       'custom': '自定义',
       'rows': '列表行也用强调色',
@@ -155,12 +186,18 @@ window.__ModuleLoader__.load({
       'sampleProvider': '第三方中转',
       'sampleModel': 'DeepSeek-V4.1-Flash',
       'badgeSample': '新',
+      'cardLabel': '供应商标签颜色',
+      'cardHint': '只影响这个供应商的标签。',
+      'cardDefault': '跟随默认',
+      'cardClear': '清除',
+      'cardOverridden': '已单独设置',
+      'cardUnable': '这个设置页不可用，颜色保存在浏览器里。',
     }
     const en = {
       'title': 'Provider before model name',
-      'description': 'Shows the provider name before the model name in the composer model seat. DeepSeek\'s own routes stay in the caption tone; every other route uses the accent below.',
-      'accent': 'Accent colour',
-      'accentHint': 'Used only for the provider label of non-DeepSeek routes.',
+      'description': 'Shows the provider name before the model name in the composer model seat. DeepSeek\'s own routes stay in the caption tone; every other route uses the default accent below.',
+      'accent': 'Default accent',
+      'accentHint': 'Used by providers without a colour of their own. Set a provider-specific colour on its own card.',
       'presets': 'Presets',
       'custom': 'Custom',
       'rows': 'Accent the list rows too',
@@ -172,6 +209,84 @@ window.__ModuleLoader__.load({
       'sampleProvider': 'Relay',
       'sampleModel': 'DeepSeek-V4.1-Flash',
       'badgeSample': 'New',
+      'cardLabel': 'Provider label colour',
+      'cardHint': 'Only this provider\'s label is affected.',
+      'cardDefault': 'Follow the default',
+      'cardClear': 'Clear',
+      'cardOverridden': 'Set separately',
+      'cardUnable': 'This settings surface is unavailable; colours live in the browser.',
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Shared bits
+     * ------------------------------------------------------------------ */
+    const labelStyle = { fontSize: '13px', color: 'var(--dsw-alias-label-primary)', fontWeight: 500 }
+    const hintStyle = { margin: '2px 0 0', fontSize: '12px', lineHeight: '18px', color: 'var(--dsw-alias-label-tertiary)' }
+
+    /** One round colour button. */
+    function swatch({ key, color, size, active, onClick }) {
+      return h('button', {
+        key,
+        type: 'button',
+        title: color,
+        'aria-label': color,
+        'aria-pressed': active,
+        onClick,
+        style: {
+          width: size,
+          height: size,
+          padding: 0,
+          borderRadius: '50%',
+          cursor: 'pointer',
+          background: color,
+          border: active
+            ? '2px solid var(--dsw-alias-label-primary)'
+            : '1px solid var(--dsw-alias-border-l2)',
+        },
+      })
+    }
+
+    /** A hex text field plus the native colour picker beside it. */
+    function colorInputs({ value, ariaLabel, onCommit }) {
+      return [
+        h('input', {
+          key: 'picker',
+          type: 'color',
+          'aria-label': ariaLabel,
+          value,
+          onChange: event => { onCommit(event.target.value.toLowerCase()) },
+          style: {
+            width: '28px',
+            height: '24px',
+            padding: 0,
+            border: '1px solid var(--dsw-alias-border-l2)',
+            borderRadius: 'var(--dsw-radius-xs)',
+            background: 'transparent',
+            cursor: 'pointer',
+          },
+        }),
+        h('input', {
+          key: 'hex',
+          type: 'text',
+          'aria-label': ariaLabel,
+          defaultValue: value,
+          spellCheck: false,
+          onChange: event => {
+            const next = event.target.value.trim()
+            if (HEX.test(next)) onCommit(next.toLowerCase())
+          },
+          style: {
+            width: '92px',
+            padding: '3px 8px',
+            border: '1px solid var(--dsw-alias-border-l2)',
+            borderRadius: 'var(--dsw-radius-sm)',
+            background: 'var(--dsw-alias-bg-layer-1)',
+            color: 'var(--dsw-alias-label-primary)',
+            font: 'inherit',
+            fontSize: '12px',
+          },
+        }),
+      ]
     }
 
     /**
@@ -219,14 +334,21 @@ window.__ModuleLoader__.load({
 
         const firstParty = FIRST_PARTY_PROVIDERS.has(provider.id)
         if (firstParty && !current.showOfficialProvider) {
-          return h('span', null, placement === 'trigger' ? badge : null, h('span', null, modelName), placement === 'trigger' ? null : badge)
+          return h('span', null,
+            placement === 'trigger' ? badge : null,
+            h('span', null, modelName),
+            placement === 'trigger' ? null : badge)
         }
 
-        const colored = !firstParty && (placement !== 'option' || current.colorRows)
+        // An explicit per-provider colour always wins, including on DeepSeek's
+        // own routes: choosing a colour for one is a request to see it.
+        const override = current.colors[provider.id]
+        const colored = override !== undefined || (!firstParty && (placement !== 'option' || current.colorRows))
+        const accent = override ?? current.accent
         const providerStyle = colored
           ? {
-            color: current.accent,
-            border: `1px solid ${current.accent}`,
+            color: accent,
+            border: `1px solid ${accent}`,
             borderRadius: 'var(--dsw-radius-xs)',
             fontSize: '12px',
             lineHeight: '16px',
@@ -239,7 +361,6 @@ window.__ModuleLoader__.load({
             color: firstParty ? 'var(--dsw-alias-label-caption)' : 'var(--dsw-alias-label-secondary)',
             fontWeight: firstParty ? 400 : 500,
           }
-        const providerNode = h('span', { style: providerStyle }, provider.name)
         // The chip separates itself with its border and margin; every other
         // provider name needs the middot so it does not run into the model name.
         const separator = colored
@@ -252,7 +373,7 @@ window.__ModuleLoader__.load({
           'data-provider-coloured': colored ? '' : undefined,
         },
           placement === 'trigger' ? badge : null,
-          providerNode,
+          h('span', { style: providerStyle }, provider.name),
           separator,
           h('span', null, modelName),
           placement === 'trigger' ? null : badge)
@@ -260,7 +381,7 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * Build the Settings → Models footer card.
+     * Build the default card at the bottom of Settings → Models.
      * @param t - bound translator for this plugin's namespace.
      * @returns the slot component.
      */
@@ -273,11 +394,8 @@ window.__ModuleLoader__.load({
         /** Commit a typed hex colour once it is complete. */
         const commitDraft = (value) => {
           setDraft(value)
-          if (/^#[0-9a-f]{6}$/i.test(value)) patchSettings({ accent: value.toLowerCase() })
+          if (HEX.test(value)) patchSettings({ accent: value.toLowerCase() })
         }
-
-        const label = { fontSize: '13px', color: 'var(--dsw-alias-label-primary)', fontWeight: 500 }
-        const hint = { margin: '2px 0 0', fontSize: '12px', lineHeight: '18px', color: 'var(--dsw-alias-label-tertiary)' }
 
         return h('section', {
           style: {
@@ -294,10 +412,10 @@ window.__ModuleLoader__.load({
         },
           h('header', null,
             h('h3', { style: { margin: 0, fontSize: '14px', fontWeight: 600, color: 'var(--dsw-alias-label-primary)' } }, t('title')),
-            h('p', { style: hint }, t('description'))),
+            h('p', { style: hintStyle }, t('description'))),
 
           h('div', null,
-            h('span', { style: label }, t('accent')),
+            h('span', { style: labelStyle }, t('accent')),
             h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' } },
               ...ACCENT_PRESETS.map(preset => h('button', {
                 key: preset,
@@ -317,32 +435,8 @@ window.__ModuleLoader__.load({
                     : '1px solid var(--dsw-alias-border-l2)',
                 },
               })),
-              h('input', {
-                type: 'color',
-                'aria-label': t('custom'),
-                value: current.accent,
-                onChange: event => { patchSettings({ accent: event.target.value.toLowerCase() }) },
-                style: { width: '28px', height: '24px', padding: 0, border: '1px solid var(--dsw-alias-border-l2)', borderRadius: 'var(--dsw-radius-xs)', background: 'transparent', cursor: 'pointer' },
-              }),
-              h('input', {
-                type: 'text',
-                'aria-label': t('custom'),
-                value: draft,
-                spellCheck: false,
-                onChange: event => { commitDraft(event.target.value) },
-                onBlur: () => { setDraft(current.accent) },
-                style: {
-                  width: '96px',
-                  padding: '3px 8px',
-                  border: '1px solid var(--dsw-alias-border-l2)',
-                  borderRadius: 'var(--dsw-radius-sm)',
-                  background: 'var(--dsw-alias-bg-layer-1)',
-                  color: 'var(--dsw-alias-label-primary)',
-                  font: 'inherit',
-                  fontSize: '12px',
-                },
-              })),
-            h('p', { style: hint }, t('accentHint'))),
+              ...colorInputs({ value: current.accent, ariaLabel: t('custom'), onCommit: commitDraft })),
+            h('p', { style: hintStyle }, t('accentHint'))),
 
           h('label', { style: { display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer' } },
             h('input', {
@@ -351,7 +445,7 @@ window.__ModuleLoader__.load({
               onChange: event => { patchSettings({ colorRows: event.target.checked }) },
               style: { marginTop: '2px' },
             }),
-            h('span', null, h('span', { style: label }, t('rows')), h('p', { style: hint }, t('rowsHint')))),
+            h('span', null, h('span', { style: labelStyle }, t('rows')), h('p', { style: hintStyle }, t('rowsHint')))),
 
           h('label', { style: { display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer' } },
             h('input', {
@@ -360,10 +454,10 @@ window.__ModuleLoader__.load({
               onChange: event => { patchSettings({ showOfficialProvider: event.target.checked }) },
               style: { marginTop: '2px' },
             }),
-            h('span', null, h('span', { style: label }, t('official')), h('p', { style: hint }, t('officialHint')))),
+            h('span', null, h('span', { style: labelStyle }, t('official')), h('p', { style: hintStyle }, t('officialHint')))),
 
           h('div', null,
-            h('span', { style: label }, t('preview')),
+            h('span', { style: labelStyle }, t('preview')),
             h('div', {
               style: {
                 display: 'flex',
@@ -409,6 +503,61 @@ window.__ModuleLoader__.load({
       }
     }
 
+    /**
+     * Build the per-provider colour control shown inside one provider card.
+     * @param t - bound translator for this plugin's namespace.
+     * @returns the keyed slot component.
+     */
+    function createProviderColorControl(t) {
+      return function ProviderColorControl(props) {
+        const current = useSettings()
+        const entry = props.provider
+        const providerId = entry === undefined ? undefined : entry.provider
+        if (typeof providerId !== 'string' || providerId === '') return null
+        const override = current.colors[providerId]
+        const value = override ?? current.accent
+
+        return h('div', {
+          style: {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+            marginTop: '10px',
+            paddingTop: '10px',
+            borderTop: '1px solid var(--dsw-alias-border-l1)',
+          },
+          'data-provider-color-control': providerId,
+        },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } },
+            h('span', { style: { fontSize: '12px', color: 'var(--dsw-alias-label-secondary)' } }, t('cardLabel')),
+            ...ACCENT_PRESETS.map(preset => swatch({
+              key: preset,
+              color: preset,
+              size: 18,
+              active: value === preset,
+              onClick: () => { setProviderColor(providerId, preset) },
+            })),
+            ...colorInputs({ value, ariaLabel: t('cardLabel'), onCommit: hex => { setProviderColor(providerId, hex) } }),
+            override === undefined
+              ? h('span', { style: { fontSize: '12px', color: 'var(--dsw-alias-label-tertiary)' } }, t('cardDefault'))
+              : h('button', {
+                type: 'button',
+                onClick: () => { clearProviderColor(providerId) },
+                style: {
+                  padding: '2px 8px',
+                  border: '1px solid var(--dsw-alias-border-l2)',
+                  borderRadius: 'var(--dsw-radius-sm)',
+                  background: 'transparent',
+                  color: 'var(--dsw-alias-label-secondary)',
+                  font: 'inherit',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                },
+              }, t('cardClear'))),
+          h('p', { style: { ...hintStyle, margin: 0 } }, t('cardHint')))
+      }
+    }
+
     return {
       inject: ['slots', 'locale'],
       apply(ctx) {
@@ -417,6 +566,7 @@ window.__ModuleLoader__.load({
 
         const ModelLabel = createModelLabel(ctx)
         const SettingsCard = createSettingsCard(t)
+        const ProviderColorControl = createProviderColorControl(t)
 
         ctx.slots.inject('conversation.input.model.label', () => ctx.slots.register(
           { name: 'conversation.input.model.label' },
@@ -426,6 +576,48 @@ window.__ModuleLoader__.load({
           { name: 'settings.models.footer', id: 'model-provider-info', order: 20 },
           SettingsCard,
         ))
+
+        // The provider-card seat is keyed by the provider row's settings
+        // namespace, which is an open string chosen by each adapter family, so
+        // one contribution has to be registered per namespace the Host serves.
+        // `configForms` is read loosely: a profile without the settings domain
+        // simply gets no per-provider controls.
+        const configForms = ctx.get('configForms')
+        if (configForms === undefined || typeof configForms.describe !== 'function') return
+        const mirror = configForms.describe()
+        const disposers = new Map()
+        const sync = () => {
+          let namespaces
+          try {
+            namespaces = mirror.getSnapshot()?.view?.namespaces ?? []
+          } catch {
+            return
+          }
+          const served = new Set(namespaces.map(view => view.ns).filter(ns => typeof ns === 'string' && ns !== ''))
+          for (const [ns, dispose] of [...disposers]) {
+            if (served.has(ns)) continue
+            dispose()
+            disposers.delete(ns)
+          }
+          for (const ns of served) {
+            if (disposers.has(ns)) continue
+            const dispose = ctx.slots.register(
+              { name: 'settings.models.provider-card', key: ns },
+              ProviderColorControl,
+            )
+            disposers.set(ns, typeof dispose === 'function' ? dispose : () => {})
+          }
+        }
+        ctx.effect(() => {
+          const off = mirror.subscribe(sync)
+          if (typeof mirror.ensure === 'function') void mirror.ensure()
+          sync()
+          return () => {
+            off?.()
+            for (const dispose of disposers.values()) dispose()
+            disposers.clear()
+          }
+        }, 'model-provider-info: provider colour controls')
       },
     }
   },
