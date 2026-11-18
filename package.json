@@ -1,0 +1,54 @@
+{
+  "name": "dsh-model-provider-info",
+  "version": "0.1.0",
+  "description": "Shows the provider name before the model name in the DeepSeek Harness composer, marking non-DeepSeek routes with a coloured chip.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "model",
+    "provider",
+    "label"
+  ],
+  "engines": {
+    "dsh": ">=0.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yanxijian/dsh-model-provider-info.git"
+  },
+  "homepage": "https://github.com/yanxijian/dsh-model-provider-info#readme",
+  "bugs": {
+    "url": "https://github.com/yanxijian/dsh-model-provider-info/issues"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "docs",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-model-selection"
+      ]
+    }
+  }
+}

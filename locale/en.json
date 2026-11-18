@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Provider before model name",
+    "description": "Shows the provider name before the model name in the composer model selector. DeepSeek's own routes stay in the neutral caption tone, while any other provider (a relay, a self-hosted gateway, another vendor) gets a #F61A43 outlined chip, so the route behind an answer is visible without opening the menu.",
+    "detail": "docs/DETAIL.md"
+  }
+}
