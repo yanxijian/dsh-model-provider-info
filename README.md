@@ -10,6 +10,14 @@ the `conversation.input.model.label` inline slot, so the same label reads
 `DeepSeek Account · DeepSeek-V4.1-Flash` instead of `DeepSeek-V4.1-Flash`, and the reasoning
 effort stays a separate caption beside it.
 
+## What it looks like
+
+![One colour swatch and a live preview on each provider card](docs/provider-colors.png)
+
+Every provider card in **Settings → Models** carries a single colour swatch and a preview of the
+name the composer will draw for it: the DeepSeek account row keeps the default grey text, while
+the DeepSeek API route shows the blue chip picked for it.
+
 ## First-party vs third-party
 
 `deepseek-account` and `deepseek-official` count as first-party; every other provider id is
