@@ -35,20 +35,21 @@ label draws) is reproduced here: before the name in the trigger, after it in men
 
 **Settings → Models.** Two places, stored per browser:
 
-The bottom card sets the defaults:
+**Every provider card** ends with one colour icon: click it to pick that provider's colour, and
+it shows the colour in use (a heavier ring means the provider has its own colour rather than
+the default). Double-click it to go back to the default.
+
+**The bottom card** sets the defaults:
 
 | Option | Default | Effect |
 |---|---|---|
-| Default accent | `#F61A43` | Six presets, a colour picker, or a typed hex value — used by every provider without its own colour |
-| Accent the list rows too | off | Off: expanded rows differ by tone and weight only. On: they get the outlined chip as well |
+| Default colour | `#F61A43` | The icon picks it; used by every provider without a colour of its own |
+| Colour the list rows too | off | Off: expanded rows differ by tone and weight only. On: they get the outlined chip as well |
 | Show the provider on DeepSeek routes | on | Off: `deepseek-account` / `deepseek-official` show the model name alone |
 
-Every provider card carries its own colour control (`settings.models.provider-card`), so each
-provider can have a distinct chip colour. A provider without an override follows the default
-accent; `Clear` drops the override. Choosing a colour for one of DeepSeek's own routes also
-switches that route to the chip, since an explicit colour is a request to see it.
-
-Both surfaces share one live record, so changes show up in the composer immediately.
+Choosing a colour for one of DeepSeek's own routes also switches that route to the chip, since
+an explicit colour is a request to see it. Both surfaces share one live record, so changes show
+up in the composer immediately.
 
 ## Install
 
