@@ -35,7 +35,7 @@
 
 ## 配置
 
-![供应商卡片上的颜色入口与预览](provider-colors.png)
+![供应商卡片上的颜色入口与预览](provider-colors.zh-CN.png)
 
 **设置 → 模型**，两处，都保存在浏览器本地：
 
