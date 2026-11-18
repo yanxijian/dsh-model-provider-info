@@ -199,6 +199,21 @@ window.__ModuleLoader__.load({
     const FIRST_PARTY_GREY = '#81858C'
 
     /**
+     * Optical nudge for the text inside the outlined chip.
+     *
+     * A line box splits the font's em square, not the ink: at 12px a Windows UI
+     * font puts the baseline about 13px below the top of a 16px line box and
+     * leaves only about 3px below it. A lowercase label never fills the
+     * ascender headroom, so its bulk sits low, while a dot (the i in "zai")
+     * reaches the ascender and pulls the other way. With the border counted,
+     * the ink is 8px above and 6px below inside the frame; half a pixel of
+     * upward shift splits it 7 / 7. Relative positioning moves only the ink —
+     * the border box and the baseline it shares with the model name stay put —
+     * and half a pixel is exactly one device pixel on a 2x display.
+     */
+    const CHIP_TEXT_NUDGE = { position: 'relative', top: '-0.5px' }
+
+    /**
      * Colour entry: a swatch that opens a small preset board, with the native
      * picker behind a "Custom…" row for anything the presets do not cover.
      * @param options - swatch background, the picker's starting value, size,
@@ -422,7 +437,7 @@ window.__ModuleLoader__.load({
           'data-provider-coloured': colored ? '' : undefined,
         },
           placement === 'trigger' ? badge : null,
-          h('span', { style: providerStyle }, provider.name),
+          h('span', { style: providerStyle }, h('span', { style: CHIP_TEXT_NUDGE }, provider.name)),
           separator,
           h('span', null, modelName),
           placement === 'trigger' ? null : badge)
@@ -554,7 +569,7 @@ window.__ModuleLoader__.load({
                 padding: '0 5px',
                 whiteSpace: 'nowrap',
               },
-            }, entry.displayName ?? providerId)
+            }, h('span', { style: CHIP_TEXT_NUDGE }, entry.displayName ?? providerId))
             : h('span', { style: { color: 'var(--dsw-alias-label-caption)', fontSize: '12px' } }, entry.displayName ?? providerId))
       }
     }
