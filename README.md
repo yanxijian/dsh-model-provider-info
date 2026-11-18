@@ -28,6 +28,21 @@ Emphasis is graded by surface, so the list does not become a wall of warnings:
 The list rows are deliberately quieter: every group already carries its provider as a heading,
 so a chip per row would say the provider twice and paint the column red.
 
+The catalog badge a provider attaches to a model (`model.badge`, the same `Tag` the built-in
+label draws) is reproduced here: before the name in the trigger, after it in menus and rows.
+
+## Configuration
+
+**Settings → Models**, bottom card. Options are stored per browser:
+
+| Option | Default | Effect |
+|---|---|---|
+| Accent colour | `#F61A43` | Six presets, a colour picker, or a typed hex value for third-party providers |
+| Accent the list rows too | off | Off: expanded rows differ by tone and weight only. On: they get the outlined chip as well |
+| Show the provider on DeepSeek routes | on | Off: `deepseek-account` / `deepseek-official` show the model name alone |
+
+The card also renders a live preview. `Restore defaults` puts every option back.
+
 ## Install
 
 ```sh
@@ -44,8 +59,8 @@ registers an official slot instead of patching a compiled bundle.
 
 ## Deliberate trade-offs
 
-- `#F61A43` is a literal colour, not a theme token — the single exception to "tokens only". It
-  lives in one `ACCENT` constant at the top of `client.js`.
+- `#F61A43` is the default accent — a literal colour rather than a theme token, because the
+  user picks it. Everything else stays on tokens.
 - Outlined, not filled: accent text over a tint of its own hue loses about a fifth of its
   contrast, and the border alone already reads as a badge.
 - 12px / 600 rather than the `Custom` tag's 11px / 400: the accent is a mid-tone at roughly
@@ -60,8 +75,9 @@ registers an official slot instead of patching a compiled bundle.
 
 - Display only. Selection, search, focus, check marks, the `/model` command popup and the
   trigger's accessible name stay owned by the model selector.
-- Replacing the label drops the catalog `model.badge` that the built-in fallback would render.
-- Long names still ellipsize inside the trigger; the chip is part of that width.
+- Preferences live in `localStorage` under `dsh-model-provider-info/settings/v1`, so they are
+  per browser rather than per profile.
+- Long names still ellipsize inside the trigger; the chip and badge are part of that width.
 
 ## Publishing checklist
 
