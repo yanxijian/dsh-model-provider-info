@@ -1,6 +1,6 @@
 {
   "name": "dsh-model-provider-info",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Shows the provider name before the model name in the DeepSeek Harness composer, marking non-DeepSeek routes with a coloured chip.",
   "type": "module",
   "license": "MIT",

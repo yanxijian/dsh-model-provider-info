@@ -171,7 +171,7 @@ window.__ModuleLoader__.load({
       'rowsHint': '关闭时，展开的模型列表里只有字重和灰度差别。',
       'official': '官方路由也显示供应商',
       'officialHint': '关闭后，DeepSeek 账号与官方 API 只显示模型名。',
-      'cardPick': '点一下选择颜色，双击恢复默认',
+      'cardPick': '点一下选择颜色',
       'custom': '自定义…',
       'followDefault': '跟随默认',
     }
@@ -184,7 +184,7 @@ window.__ModuleLoader__.load({
       'rowsHint': 'Off: the expanded model list differs only by tone and weight.',
       'official': 'Show the provider on DeepSeek routes',
       'officialHint': 'Off: the DeepSeek Account and official API routes show the model name alone.',
-      'cardPick': 'Click to pick a colour, double-click to follow the default',
+      'cardPick': 'Click to pick the label colour',
       'custom': 'Custom…',
       'followDefault': 'Follow the default',
     }
@@ -197,7 +197,7 @@ window.__ModuleLoader__.load({
       'rowsHint': 'オフのとき、展開したモデル一覧は色調とウェイトだけの違いになります。',
       'official': 'DeepSeek の経路にもプロバイダーを表示',
       'officialHint': 'オフのとき、DeepSeek アカウントと公式 API はモデル名だけを表示します。',
-      'cardPick': 'クリックで色を選び、ダブルクリックで既定に戻す',
+      'cardPick': 'クリックでラベルの色を選ぶ',
       'custom': 'カスタム…',
       'followDefault': '既定に従う',
     }
@@ -212,19 +212,51 @@ window.__ModuleLoader__.load({
     const FIRST_PARTY_GREY = '#81858C'
 
     /**
-     * Optical nudge for the text inside the outlined chip.
+     * The provider label's box, shared by the outlined chip and the plain text.
      *
-     * A line box splits the font's em square, not the ink: at 12px a Windows UI
-     * font puts the baseline about 13px below the top of a 16px line box and
-     * leaves only about 3px below it. A lowercase label never fills the
-     * ascender headroom, so its bulk sits low, while a dot (the i in "zai")
-     * reaches the ascender and pulls the other way. With the border counted,
-     * the ink is 8px above and 6px below inside the frame; half a pixel of
-     * upward shift splits it 7 / 7. Relative positioning moves only the ink —
-     * the border box and the baseline it shares with the model name stay put —
-     * and half a pixel is exactly one device pixel on a 2x display.
+     * Both variants use the same font size, line height and a 1px border — the
+     * plain one's border is transparent — so they occupy the same box and stay
+     * on the same baseline as the model name. A borderless label would size its
+     * content box from the font's em square exactly the same way (vertical
+     * padding on an inline box grows the border box without moving the text),
+     * but keeping one border width means the two never differ by a subpixel
+     * under scaling.
      */
-    const CHIP_TEXT_NUDGE = { position: 'relative', top: '-0.5px' }
+    const PROVIDER_BOX = {
+      fontSize: '12px',
+      lineHeight: '16px',
+      border: '1px solid transparent',
+      whiteSpace: 'nowrap',
+    }
+
+    /**
+     * The outlined chip, exactly as the composer draws it.
+     *
+     * No glyph nudge: shifting the ink would break the baseline it shares with
+     * the model name, which is the alignment that matters on the composer line.
+     * Lowercase-only names (wps) still read a pixel low inside the frame because
+     * they have no ascender, while names with capitals or CJK fill the ascent;
+     * that difference belongs to the glyphs, not the box.
+     * @param color - this provider's accent colour.
+     * @returns the style of the chip's outer span.
+     */
+    function providerChipStyle(color) {
+      return {
+        ...PROVIDER_BOX,
+        color,
+        border: `1px solid ${color}`,
+        borderRadius: 'var(--dsw-radius-xs)',
+        fontWeight: 600,
+        padding: '0 5px',
+        // 1px is the exact headroom, not a guess: the composer wraps this label
+        // in a 20px line box with overflow hidden, the 12px font's em box is
+        // 16px, so the line box leaves 2px of half-leading below it. The border
+        // takes 1px of that, which leaves 1px of padding before the border's
+        // outer edge reaches the clip line. Vertical padding grows an inline
+        // box's border downward without moving the text inside it.
+        paddingBottom: '1px',
+      }
+    }
 
     /**
      * Colour entry: a swatch that opens a small preset board, with the native
@@ -238,35 +270,54 @@ window.__ModuleLoader__.load({
     }) {
       const [open, setOpen] = useState(false)
       const rootRef = useRef(null)
+      const triggerRef = useRef(null)
+      const boardRef = useRef(null)
+      const restoreFocus = useRef(false)
       useEffect(() => {
         if (!open) return undefined
+        // Move focus into the board so the keyboard lands on the first preset
+        // instead of tabbing through whatever follows the swatch.
+        const board = boardRef.current
+        const firstPreset = board === null ? undefined : board.querySelector('button')
+        if (firstPreset !== undefined && firstPreset !== null) firstPreset.focus()
         const onDown = (event) => {
           if (rootRef.current !== null && rootRef.current.contains(event.target)) return
+          restoreFocus.current = false
           setOpen(false)
         }
-        const onKey = (event) => { if (event.key === 'Escape') setOpen(false) }
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return
+          event.preventDefault()
+          restoreFocus.current = true
+          setOpen(false)
+        }
         document.addEventListener('mousedown', onDown)
         document.addEventListener('keydown', onKey)
         return () => {
           document.removeEventListener('mousedown', onDown)
           document.removeEventListener('keydown', onKey)
+          // Escape and picking a colour return the keyboard to the swatch; a
+          // click elsewhere leaves focus where the person put it.
+          if (restoreFocus.current) {
+            restoreFocus.current = false
+            const trigger = triggerRef.current
+            if (trigger !== null) trigger.focus()
+          }
         }
       }, [open])
 
       /** Pick one palette colour and close the board. */
-      const choose = (color) => { onCommit(color); setOpen(false) }
+      const choose = (color) => { onCommit(color); restoreFocus.current = true; setOpen(false) }
 
       return h('span', { ref: rootRef, style: { position: 'relative', display: 'inline-flex' } },
         h('button', {
+          ref: triggerRef,
           type: 'button',
           title,
           'aria-label': title,
           'aria-haspopup': 'dialog',
           'aria-expanded': open,
-          onClick: () => { setOpen(value => !value) },
-          onDoubleClick: onReset === undefined
-            ? undefined
-            : (event) => { event.preventDefault(); onReset() },
+          onClick: () => { restoreFocus.current = false; setOpen(value => !value) },
           style: {
             width: size,
             height: size,
@@ -281,6 +332,7 @@ window.__ModuleLoader__.load({
         }),
         open
           ? h('div', {
+            ref: boardRef,
             role: 'dialog',
             'aria-label': title,
             style: {
@@ -350,7 +402,7 @@ window.__ModuleLoader__.load({
               ? null
               : h('button', {
                 type: 'button',
-                onClick: () => { setOpen(false); onReset() },
+                onClick: () => { restoreFocus.current = true; setOpen(false); onReset() },
                 style: {
                   gridColumn: '1 / -1',
                   padding: '5px 10px',
@@ -410,7 +462,11 @@ window.__ModuleLoader__.load({
         }
 
         const firstParty = FIRST_PARTY_PROVIDERS.has(provider.id)
-        if (firstParty && !current.showOfficialProvider) {
+        const override = current.colors[provider.id]
+        // Hiding DeepSeek's own providers is about the name label, not about a
+        // colour the person took the trouble to pick: an explicit colour still
+        // renders the chip, matching the rule below.
+        if (firstParty && !current.showOfficialProvider && override === undefined) {
           return h('span', null,
             placement === 'trigger' ? badge : null,
             h('span', null, modelName),
@@ -419,22 +475,12 @@ window.__ModuleLoader__.load({
 
         // An explicit per-provider colour always wins, including on DeepSeek's
         // own routes: choosing a colour for one is a request to see it.
-        const override = current.colors[provider.id]
         const colored = override !== undefined || (!firstParty && (placement !== 'option' || current.colorRows))
         const accent = override ?? current.accent
         const providerStyle = colored
-          ? {
-            color: accent,
-            border: `1px solid ${accent}`,
-            borderRadius: 'var(--dsw-radius-xs)',
-            fontSize: '12px',
-            lineHeight: '16px',
-            fontWeight: 600,
-            padding: '0 5px',
-            marginRight: '4px',
-            whiteSpace: 'nowrap',
-          }
+          ? { ...providerChipStyle(accent), marginRight: '4px' }
           : {
+            ...PROVIDER_BOX,
             color: firstParty ? 'var(--dsw-alias-label-caption)' : 'var(--dsw-alias-label-secondary)',
             fontWeight: firstParty ? 400 : 500,
           }
@@ -445,12 +491,11 @@ window.__ModuleLoader__.load({
           : h('span', { style: { color: 'var(--dsw-alias-label-caption)', padding: '0 2px' }, 'aria-hidden': 'true' }, '·')
 
         return h('span', {
-          'data-provider-label': '',
           'data-provider-kind': firstParty ? 'first-party' : 'third-party',
           'data-provider-coloured': colored ? '' : undefined,
         },
           placement === 'trigger' ? badge : null,
-          h('span', { style: providerStyle }, h('span', { style: CHIP_TEXT_NUDGE }, provider.name)),
+          h('span', { style: providerStyle }, provider.name),
           separator,
           h('span', null, modelName),
           placement === 'trigger' ? null : badge)
@@ -571,19 +616,10 @@ window.__ModuleLoader__.load({
           // a coloured chip for third-party routes and for any explicit colour,
           // plain caption text for a first-party route on its default.
           colored
-            ? h('span', {
-              style: {
-                color: background,
-                border: `1px solid ${background}`,
-                borderRadius: 'var(--dsw-radius-xs)',
-                fontSize: '12px',
-                lineHeight: '16px',
-                fontWeight: 600,
-                padding: '0 5px',
-                whiteSpace: 'nowrap',
-              },
-            }, h('span', { style: CHIP_TEXT_NUDGE }, entry.displayName ?? providerId))
-            : h('span', { style: { color: 'var(--dsw-alias-label-caption)', fontSize: '12px' } }, entry.displayName ?? providerId))
+            ? h('span', { style: providerChipStyle(background) }, entry.displayName ?? providerId)
+            : h('span', {
+              style: { ...PROVIDER_BOX, color: 'var(--dsw-alias-label-caption)' },
+            }, entry.displayName ?? providerId))
       }
     }
 

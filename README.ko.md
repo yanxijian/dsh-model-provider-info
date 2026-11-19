@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/v/dsh-model-provider-info.svg)](https://www.npmjs.com/package/dsh-model-provider-info)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<!-- translated-from: README.md sha256:b4631e22a0dc -->
+<!-- translated-from: README.md sha256:a713ac6a5a5c -->
 
 DeepSeek Harness 입력창의 모델 자리에 모델 이름 앞에 공급자 이름을 표시하고, 서드파티 경로에는 고유한
 시각적 무게를 부여합니다.
@@ -86,11 +86,11 @@ dsh plugin --profile <profile> add dsh-model-provider-info
   입력창 위에서 약 3.4:1 에 그쳐 11px regular 로는 버티지 못합니다.
 - 테두리는 0.5px 이 아니라 1px: 100% DPI Windows 에서는 반 픽셀 선이 흐려지거나 사라집니다.
 - 공급자 span 은 순수 inline 으로 두어 13px 모델 이름과 기준선을 공유합니다.
-- 글자를 0.5px 위로 올립니다(`position: relative`). 줄 상자는 글자의 em 사각형을 나누는 것이지 잉크를
-  나누는 것이 아니므로, 1px 테두리 안의 12px 소문자는 위로 약 8px, 아래로 약 4px 여백이 남고, `zai` 의
-  i 점은 ascender 에 닿아 반대 방향으로 당깁니다. 0.5px 이면 잉크가 위아래 약 7px 씩이 되며(2x 화면에서
-  정확히 1 장치 픽셀), 움직이는 것은 잉크뿐입니다. 테두리 상자와 모델 이름과 공유하는 기준선은 그대로
-  입니다.
+  - 테두리를 아래로 1px 만 넓힙니다(글자를 위로 옮기는 대신). inline 박스의 세로 padding 은 테두리만
+    넓히고 글자는 움직이지 않으므로, 라벨은 모델 이름과 공유하는 기준선에 그대로 남습니다. 1px 이 한계
+    입니다 — 호스트가 이 라벨을 20px 줄 상자(`overflow: hidden`)로 감싸고, 칩 자체가 이미 18px 입니다.
+    소문자만 있는 이름(`wps`)은 ascender 가 없어 프레임 안에서 약 1px 낮게 보이지만, 이는 글자 모양의
+    문제이고 잉크를 움직이면 모델 이름과 공유하는 기준선이 깨집니다.
 - `priority` 는 필요 없습니다. 0.2.1 부터 호스트의 이 single 슬롯에는 내장 점유자가 없습니다.
 
 ## 제한

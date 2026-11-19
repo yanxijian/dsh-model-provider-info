@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/v/dsh-model-provider-info.svg)](https://www.npmjs.com/package/dsh-model-provider-info)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<!-- translated-from: README.md sha256:b4631e22a0dc -->
+<!-- translated-from: README.md sha256:a713ac6a5a5c -->
 
 在 DeepSeek Harness 输入框的模型位里，把供应商名称显示在模型名前面，并让第三方路由有自己的一份视觉分量。
 
@@ -47,7 +47,7 @@
 **设置 → 模型**，两处，按浏览器保存：
 
 **每张供应商卡片**末尾有一枚颜色图标：点一下为该供应商选色，图标显示当前生效的颜色（描边更重表示这个
-供应商有自己的颜色，而不是跟随默认）；双击恢复默认。
+供应商有自己的颜色，而不是跟随默认）；面板里的「跟随默认」可以回到默认色。
 
 **底部卡片**设默认值：
 
@@ -82,9 +82,10 @@ dsh plugin --profile <profile> add dsh-model-provider-info
   深色输入框底上约 3.4:1，11px 的常规字重撑不住。
 - 边框用 1px 而不是 0.5px：100% DPI 下 Windows 会把半像素线渲染成发虚的一条，或者直接丢掉。
 - 供应商 span 保持纯 inline，与 13px 模型名共享基线。
-- 字形上移 0.5px（`position: relative`）：行盒分的是字体的 em 方框而非墨迹，所以 1px 描边里的 12px
-  小写字上方约 8px、下方约 4px；而 `zai` 里 i 的点顶到 ascender，又往回收。半个像素让墨迹距上下边框
-  各约 7px——2× 屏上正好一个设备像素——且只动墨迹：边框盒和它与模型名共享的基线都不动。
+- 芯片的框向下多 1px，而不是把文字往上挪：inline 盒子的竖直 padding 只扩展边框、不移动文字，所以
+  标签始终待在它与模型名共享的基线上。1px 是全部余量——宿主把标签包在 20px 行高、`overflow: hidden`
+  的盒子里，而芯片本身已经 18px 高。全小写标签（如 `wps`）在框内仍会低约 1px，那是字形没有上伸部
+  造成的；上移墨迹会破坏它与模型名的基线，因此接受现状。
 - 不需要 `priority`：0.2.1 起宿主这个 single 槽没有内置占用者。
 
 ## 限制

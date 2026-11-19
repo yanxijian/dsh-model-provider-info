@@ -44,7 +44,7 @@ before the model name in the trigger, after it in menus and rows.
 
 **Every provider card** ends with a colour icon: click to pick a colour, and the icon shows the
 colour in use (a heavier ring means the provider has its own colour rather than following the
-default); double-click to go back to the default.
+default); the board's "Follow the default" entry goes back to it.
 
 The card at the bottom of the page sets the defaults:
 
@@ -73,13 +73,14 @@ Both surfaces share one record, so the composer's model seat updates as soon as 
   blur or drops it entirely.
 - **The provider span stays a plain inline element**, sharing the baseline of the 13px model name;
   making it inline-flex would introduce a 1–2px baseline offset.
-- **The text inside the chip is nudged up 0.5px** (`position: relative`): a line box splits the
-  font's em square, not the ink — at 12px the baseline sits about 13px below the top and only about
-  3px above the bottom, and the body of lowercase text rides the x-height, so inside a 1px border
-  there is about 8px above and 4px below; the dot of the `i` in "zai" reaches the ascender and pulls
-  back the other way. Half a pixel puts the ink about 7px from either border (exactly one device
-  pixel on a 2x display), moving only the ink — not the border box, and not the baseline it shares
-  with the model name.
+  - **The chip's frame grows 1px downward rather than the glyphs moving up**: vertical padding on an
+    inline box extends the border without moving the text, so the label keeps the baseline it shares
+    with the model name. One pixel is the whole budget — the composer wraps the label in a 20px line
+    box with `overflow: hidden` and the chip is already 18px tall; at 1.5px the bottom border was
+    clipped in half. Lowercase-only names (`wps`) still read about a pixel low inside the frame
+    because they have no ascender, while names with capitals or CJK fill the ascent. That
+    difference belongs to the glyphs, and nudging the ink would break the baseline, so it is
+    accepted.
 - **No `priority` needed**: since 0.2.1 the host's single slot has no built-in occupant, so a plain
   registration is enough.
 

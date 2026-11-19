@@ -51,7 +51,7 @@ label draws) is reproduced here: before the name in the trigger, after it in men
 
 **Every provider card** ends with one colour icon: click it to pick that provider's colour, and
 it shows the colour in use (a heavier ring means the provider has its own colour rather than
-the default). Double-click it to go back to the default.
+the default); the board's **Follow the default** entry goes back to it.
 
 **The bottom card** sets the defaults:
 
@@ -91,11 +91,12 @@ registers an official slot instead of patching a compiled bundle.
 - The border is 1px, not 0.5px: at 100% DPI Windows renders a half-pixel hairline as a blur or
   drops it.
 - The provider span stays a plain inline element so it shares the 13px model name's baseline.
-- The glyphs are nudged up 0.5px (`position: relative`): a line box splits the font's em square,
-  not the ink, so 12px lowercase text inside a 1px border leaves roughly 8px above the letters
-  and 4px below, while the dot of the `i` in `zai` reaches the ascender and pulls the other way.
-  Half a pixel settles the ink at 7px above and 7px below — one device pixel on a 2x display —
-  and moves only the ink: the border box and the baseline it shares with the model name stay put.
+- The chip's frame grows 1px downward instead of the glyphs moving up: vertical padding on an
+  inline box extends the border without touching the text, so the label keeps the baseline it
+  shares with the model name. One pixel is the whole budget — the composer wraps the label in a
+  20px line box with `overflow: hidden` and the chip is already 18px tall. Lowercase-only names
+  (`wps`) still read about a pixel low inside the frame because they have no ascender; that
+  belongs to the glyphs, and nudging the ink would break the baseline, so it is accepted.
 - It needs no `priority`: hosts from 0.2.1 onward have no built-in occupant on this single slot.
 
 ## Limitations
