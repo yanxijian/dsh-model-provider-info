@@ -94,7 +94,7 @@ registers an official slot instead of patching a compiled bundle.
 - The chip's frame grows 1px downward instead of the glyphs moving up: vertical padding on an
   inline box extends the border without touching the text, so the label keeps the baseline it
   shares with the model name. One pixel is the whole budget — the composer wraps the label in a
-  20px line box with `overflow: hidden` and the chip is already 18px tall. Lowercase-only names
+  20px line box with `overflow: hidden` and the chip is already 18px tall; the expanded list's rows are only 18px, so the chip skips that pixel there and the bottom border stays inside the line box. Lowercase-only names
   (`wps`) still read about a pixel low inside the frame because they have no ascender; that
   belongs to the glyphs, and nudging the ink would break the baseline, so it is accepted.
 - It needs no `priority`: hosts from 0.2.1 onward have no built-in occupant on this single slot.

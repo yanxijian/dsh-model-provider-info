@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/v/dsh-model-provider-info.svg)](https://www.npmjs.com/package/dsh-model-provider-info)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<!-- translated-from: README.md sha256:a713ac6a5a5c -->
+<!-- translated-from: README.md sha256:807f4df950a9 -->
 
 在 DeepSeek Harness 输入框的模型位里，把供应商名称显示在模型名前面，并让第三方路由有自己的一份视觉分量。
 
@@ -84,7 +84,7 @@ dsh plugin --profile <profile> add dsh-model-provider-info
 - 供应商 span 保持纯 inline，与 13px 模型名共享基线。
 - 芯片的框向下多 1px，而不是把文字往上挪：inline 盒子的竖直 padding 只扩展边框、不移动文字，所以
   标签始终待在它与模型名共享的基线上。1px 是全部余量——宿主把标签包在 20px 行高、`overflow: hidden`
-  的盒子里，而芯片本身已经 18px 高。全小写标签（如 `wps`）在框内仍会低约 1px，那是字形没有上伸部
+  的盒子里，而芯片本身已经 18px 高；列表行只有 18px，那里不加这 1px，否则下边框会被裁掉。全小写标签（如 `wps`）在框内仍会低约 1px，那是字形没有上伸部
   造成的；上移墨迹会破坏它与模型名的基线，因此接受现状。
 - 不需要 `priority`：0.2.1 起宿主这个 single 槽没有内置占用者。
 

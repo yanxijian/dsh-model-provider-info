@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/v/dsh-model-provider-info.svg)](https://www.npmjs.com/package/dsh-model-provider-info)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<!-- translated-from: README.md sha256:a713ac6a5a5c -->
+<!-- translated-from: README.md sha256:807f4df950a9 -->
 
 DeepSeek Harness の入力欄のモデル位置に、モデル名より前にプロバイダー名を表示し、サードパーティの経路には
 独自の視覚的な重みを与えます。
@@ -90,7 +90,7 @@ CLI コマンドはアプリが使うプロファイルではなく `profiles/we
   - 枠は下方向に 1px だけ広げます（文字を上にずらすのではなく）。inline ボックスの垂直 padding は
     枠だけを広げて文字は動かさないため、ラベルはモデル名と共有するベースライン上に留まります。1px が
     上限です——ホストはこのラベルを 20px 行ボックス（`overflow: hidden`）で包み、チップ自体すでに
-    18px あります。小文字だけの名前（`wps`）は ascender を持たないため枠内で約 1px 低く見えますが、
+    18px あります。一覧の行は 18px しかないため、そこではこの 1px を足しません（足すと下枠が切れます）。小文字だけの名前（`wps`）は ascender を持たないため枠内で約 1px 低く見えますが、
     それは字形の問題で、インクを動かすとモデル名と共有するベースラインが崩れます。
 - `priority` は不要です。0.2.1 以降、ホストのこの single スロットには組み込みの占有者がいません。
 

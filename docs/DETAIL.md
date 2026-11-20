@@ -76,8 +76,7 @@ Both surfaces share one record, so the composer's model seat updates as soon as 
   - **The chip's frame grows 1px downward rather than the glyphs moving up**: vertical padding on an
     inline box extends the border without moving the text, so the label keeps the baseline it shares
     with the model name. One pixel is the whole budget — the composer wraps the label in a 20px line
-    box with `overflow: hidden` and the chip is already 18px tall; at 1.5px the bottom border was
-    clipped in half. Lowercase-only names (`wps`) still read about a pixel low inside the frame
+    box with `overflow: hidden` and the chip is already 18px tall. The expanded list's rows are only 18px, so the chip skips that pixel there — adding it took the bottom border with it. Lowercase-only names (`wps`) still read about a pixel low inside the frame
     because they have no ascender, while names with capitals or CJK fill the ascent. That
     difference belongs to the glyphs, and nudging the ink would break the baseline, so it is
     accepted.

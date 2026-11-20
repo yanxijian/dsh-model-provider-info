@@ -238,24 +238,27 @@ window.__ModuleLoader__.load({
      * they have no ascender, while names with capitals or CJK fill the ascent;
      * that difference belongs to the glyphs, not the box.
      * @param color - this provider's accent colour.
+     * @param roomy - whether the surrounding line box leaves room for an extra
+     *   pixel under the frame. The trigger and the menu value sit in a 20px line
+     *   box with overflow hidden; the expanded list's rows are 18px, where the
+     *   1px would be clipped and take the bottom border with it.
      * @returns the style of the chip's outer span.
      */
-    function providerChipStyle(color) {
-      return {
+    function providerChipStyle(color, roomy = true) {
+      const style = {
         ...PROVIDER_BOX,
         color,
         border: `1px solid ${color}`,
         borderRadius: 'var(--dsw-radius-xs)',
         fontWeight: 600,
         padding: '0 5px',
-        // 1px is the exact headroom, not a guess: the composer wraps this label
-        // in a 20px line box with overflow hidden, the 12px font's em box is
-        // 16px, so the line box leaves 2px of half-leading below it. The border
-        // takes 1px of that, which leaves 1px of padding before the border's
-        // outer edge reaches the clip line. Vertical padding grows an inline
-        // box's border downward without moving the text inside it.
-        paddingBottom: '1px',
       }
+      // Vertical padding grows an inline box's border downward without moving
+      // the text, so the frame wraps the ink a little more evenly. The budget is
+      // the half-leading the line box leaves below the em box: 2px at 20px, 1px
+      // at 18px, and the border already takes 1px of it.
+      if (roomy) style.paddingBottom = '1px'
+      return style
     }
 
     /**
@@ -478,7 +481,7 @@ window.__ModuleLoader__.load({
         const colored = override !== undefined || (!firstParty && (placement !== 'option' || current.colorRows))
         const accent = override ?? current.accent
         const providerStyle = colored
-          ? { ...providerChipStyle(accent), marginRight: '4px' }
+          ? { ...providerChipStyle(accent, placement !== 'option'), marginRight: '4px' }
           : {
             ...PROVIDER_BOX,
             color: firstParty ? 'var(--dsw-alias-label-caption)' : 'var(--dsw-alias-label-secondary)',

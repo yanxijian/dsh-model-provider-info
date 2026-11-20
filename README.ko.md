@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/v/dsh-model-provider-info.svg)](https://www.npmjs.com/package/dsh-model-provider-info)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<!-- translated-from: README.md sha256:a713ac6a5a5c -->
+<!-- translated-from: README.md sha256:807f4df950a9 -->
 
 DeepSeek Harness 입력창의 모델 자리에 모델 이름 앞에 공급자 이름을 표시하고, 서드파티 경로에는 고유한
 시각적 무게를 부여합니다.
@@ -88,7 +88,7 @@ dsh plugin --profile <profile> add dsh-model-provider-info
 - 공급자 span 은 순수 inline 으로 두어 13px 모델 이름과 기준선을 공유합니다.
   - 테두리를 아래로 1px 만 넓힙니다(글자를 위로 옮기는 대신). inline 박스의 세로 padding 은 테두리만
     넓히고 글자는 움직이지 않으므로, 라벨은 모델 이름과 공유하는 기준선에 그대로 남습니다. 1px 이 한계
-    입니다 — 호스트가 이 라벨을 20px 줄 상자(`overflow: hidden`)로 감싸고, 칩 자체가 이미 18px 입니다.
+    입니다 — 호스트가 이 라벨을 20px 줄 상자(`overflow: hidden`)로 감싸고, 칩 자체가 이미 18px 입니다. 목록 행은 18px 뿐이라 거기서는 이 1px 을 넣지 않습니다(넣으면 아래 테두리가 잘립니다).
     소문자만 있는 이름(`wps`)은 ascender 가 없어 프레임 안에서 약 1px 낮게 보이지만, 이는 글자 모양의
     문제이고 잉크를 움직이면 모델 이름과 공유하는 기준선이 깨집니다.
 - `priority` 는 필요 없습니다. 0.2.1 부터 호스트의 이 single 슬롯에는 내장 점유자가 없습니다.
